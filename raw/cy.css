@@ -1,0 +1,215 @@
+.cy {
+    border-bottom: medium solid green;
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+    /* 所有词头_页面 */
+        .cy_content_hwdsAll {
+
+        }
+            .cy_content_hwdsAll_hwd {
+                margin: 0 0.5rem;
+                text-decoration: none;
+                color: black;
+            }
+    /* 字至词_页面 */
+        .cy_charHwds {}
+            .cy_charHwds summary {
+                color: green;
+                list-style: none;
+                cursor: pointer;
+            }
+            .cy_charHwds summary[open] {
+                color: rgba(0, 0, 0, 0.3);
+                list-style: none;
+                cursor: pointer;
+            }
+            .cy_charHwds_hwd {
+                margin: 0 0.5rem;
+                text-decoration: none;
+                color: black;
+            }
+    /* 正常正文页面 */
+        .cy_nav {
+            float: right;
+        }
+            .cy::after {
+                content: "";
+                display: block;
+                height: 0;
+                visibility: hidden;
+                clear: both;
+            }
+            /* extra content */
+            .cy_hwdPrev,
+            .cy_hwdNext,
+            .cy_hwdsAll {
+                margin: 0 0.1rem;
+                background-color: yellowgreen;
+                text-decoration: none;
+            }
+            .cy_hwdPrev {
+                color: blue;
+            }
+
+            .cy_hwdNext {
+                color: red;
+            }
+            .cy_hwdsAll {
+                color: green;
+            }
+        .cy_fromHwd {
+            color: white;
+            background-color: green;
+            text-decoration: none;
+            padding: 0 0.2rem;
+        }
+        .cy_ziTiao {
+        }
+        .cy_ziMu {
+            font-weight: 900;
+        }
+            .cy_ziMu a {
+                text-decoration: none;
+                color: inherit;
+            }
+        .cy_pinYinZu {
+            margin-top: 0.1rem;
+            padding-top: 0.1rem;
+            border-top: medium solid green;
+            /* border-bottom: medium solid green; */
+        }
+            .cy_pinYin {
+                color: white;
+                background-color: green;
+
+                font-weight: 900;
+
+                display: inline-block;
+                padding: 0.1rem;
+                margin-bottom: 0.1rem;
+                text-align: center;
+            }
+            .cy_guYin {
+                display: none;
+            }
+                .cy_fanQie {
+                    
+                }
+                .cy_shengDiao {
+                    
+                }
+                .cy_yunBu {
+                    
+                }
+                .cy_shengLei {
+                    
+                }
+                .cy_shangGuYunBu {
+                    
+                }
+            .cy_zhuYin {
+                display: none;
+            }
+            .cy_yiXiang {
+                padding-left: 1rem;
+                text-indent: -1.1rem;
+                /* existed */
+            }
+                .cy_yiXiang .cy_jiaoJi::after {
+                    text-indent: 0;
+                }
+            .cy_shuZheng {
+                display: block;
+                padding-left: 1rem;
+                text-indent: -1.1rem;
+                color: rgba(0, 0, 0, 0.3);
+            }
+                .cy_shuZheng::before{
+                    content: '📚';
+                }
+                .cy_shuZheng .cy_jiaoJi::after {
+                    text-indent: 0;
+                }
+                .cy_q {
+                    border-bottom: 0.1rem solid burlywood;
+                    border-radius: 0.2rem;
+                }
+                .cy_z {
+                    border-bottom: 0.1rem solid darkolivegreen;
+                    border-radius: 0.2rem;
+                }
+            .cy_lianJie::before {
+                content: '➢';
+            }
+        .cy_ciTiao {
+            margin-top: 0.3rem;
+            padding-top: 0.3rem;
+            border-top: medium solid green;
+        }
+            .cy_ciMu {
+                font-weight: 900;
+            }
+            .cy_shuoMing::before {
+                content: '🛈';
+            }
+        /* 杂项 */
+            .cy_sub {
+                
+            }
+
+            .cy_image {
+                color: red;
+            }
+            .cy_buZi {
+                color: red;
+            }
+            .cy_youDu {
+                color: rgba(0, 0, 0, 0.3);
+            }
+/* 字條時隱藏詞條 */
+.cy_ziTiao > .cy_ciTiao {
+    /* display: none; */
+}
+/* 校记 */
+.cy_jiaoJi::after {
+    content: attr(sequence);
+    position: relative;
+    top: -0.5rem;
+    font-size: 0.5rem;
+    color: white;
+    background-color: green;
+    border: thin solid green;
+    border-radius: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    line-height: 0.5rem;
+    display: inline-block;
+    text-align: center;
+}
+.cy_jiaoJiBox {
+    color: rgba(0, 0, 0, 0.3);
+}
+.cy_jiaoJiBox::before {
+    content: '✘➡✔';
+    color: white;
+    background-color: green;
+}
+    .cy_jiaoJiItem {
+        padding-left: 0.9rem;
+    }
+    .cy_jiaoJiItem::before {
+        font-size: 50%;
+        content: attr(sequence);
+        position: relative;
+        top: -0.15rem;
+        color: white;
+        background-color: green;
+        border: thin solid green;
+        border-radius: 50%;
+        width: 0.5rem;
+        height: 0.5rem;
+        line-height: 0.5rem;
+        display: inline-block;
+        text-align: center; 
+    }
