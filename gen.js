@@ -1,104 +1,80 @@
-import {fromObj,nodefs,writeChanged,readTextLines,fromChineseNumber, splitUTF32} from 'ptk/nodebundle.cjs'
+import {nodefs,writeChanged,readTextLines,styledNumber, splitUTF32Char} from 'ptk/nodebundle.cjs'
 await nodefs;
-const srcfn='raw/ciyuan.txt';//ciyuan.txt
-const out=[];
-const parseLine=line=>{
-    line=line
-    .replace(/<span class="cy_pua">([^<]+)<\/span>/g,'$1') //as it is
-    .replace(/<span class="cy_buZi">/g,'') 
-    .replace(/<sub class="cy_sub">(\d+)<\/sub>/g,(m,m1)=>{
-        return String.fromCharCode(parseInt(m1)+0x2080)
-    }).replace(/<sub class="cy_sub">([一二三四五六七八九十]+)<\/sub>/g,(m,m1)=>{ //中文
-        const n=fromChineseNumber(m1)
-        if (n>10) console.log('wrong chinese number',line)
-        return String.fromCharCode(n+0x2080);
-    }).replace(/<span class="cy_pua cy_jiaoJi"[^>]+>([^<]+)<\/span>/g,(m,m1)=>{
-        return m1;//造字
-    }).replace(/<span class="cy_pinYin">([^<]*)<\/span>/g,(m,m1)=>{
-        return '^py﹛'+m1+'﹜'
-    }).replace(/<span class="cy_fanQie">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^fq﹛'+m1+'﹜'
-    }).replace(/<span class="cy_zhuYin">([^<]*)<\/span>/g,(m,m1)=>{
-        return '^zy﹛'+m1+'﹜'
-    }).replace(/<span class="cy_shengDiao">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^sd﹛'+m1+'﹜'
-    }).replace(/<span class="cy_yunBu">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^yb﹛'+m1+'﹜'
-    }).replace(/<span class="cy_youDu">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^yd﹛'+m1+'﹜'
-    }).replace(/<span class="cy_shengLei">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^sl﹛'+m1+'﹜'
-    }).replace(/<span class="cy_shangGuYunBu">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^sg﹛'+m1+'﹜'
-    }).replace(/<span class="cy_z">([^<]*)<\/span>/g,(m,m1)=>{
-        return '^{'+m1+'}' //傷弓之鳥 ,empty span
-    }).replace(/<span class="cy_q">([^<]+)<\/span>/g,(m,m1)=>{
-        return '^《'+m1+'》'
-    }).replace(/<div class="cy_ziMu">([^<]+)<\/div>/g,(m,m1)=>{
-        return '^〔'+m1+'〕';
-    }).replace(/<span class="cy_ciMu">([^<]+)<\/span>/g,(m,m1)=>{
-        return '\n^〔'+m1+'〕'
-    }).replace(/<a class="cy_lianJie">([^<]+)<\/a>/g,(m,m1)=>{//莐藩,飅, 嘲₂𠹗
-        return '^['+m1+']'
-    }).replace(/<a class="cy_lianJie" link="[^>]+">([^<]+)<\/a>/g,(m,m1)=>{
-        return '^['+m1+']'
-    }).replace(/<div class="cy_jiaoJiItem" sequence="(\d+)">/g,(m,m1)=>{//替換字
-        return '\n⮀'+m1+' '
-    }).replace(/<img class="cy_image" src="([A-Z\d]+)\.png"[^>]*\/>/g,(m,fn,title)=>{//替換字
-        return '^png('+fn+')'
-    }).replace(/<img class="cy_image" src="([A-Z\d]+)\.png" style="block" title="([^\"]+)"\/>/g,(m,fn,title)=>{
-        return '^png('+title+'|'+fn+')'
-    }).replace(/<span class="cy_shuoMing">([^<]+)<\/span>/g,(m,m1)=>{
-    return '㊟'+m1        
-    })
-    .replace(/<div class="cy_yiXiang"> */g,'\n')
-    .replace(/<div class="cy_pinYinZu">/g,'')
+const lines=readTextLines('raw/ciyuan.off');//output of convert.js
+import {PUA2HZPX} from './puahzpx.js'
 
-    .replace(/<div class="cy_jiaoJiBox">/g,'')
-    .replace(/<span class="cy_guYin">/g,'')
-    .replace(/<span class="cy_shuZheng">/g,'\n🕮')
-
-    return line.trim();
-}
-const emitEntry=(name,deflines)=>{
-    if (splitUTF32(name).length>1) return;//只處理字頭，詞已含在字頭內
-    const entry=[]
-    for (let i=0;i<deflines.length;i++) {
-        const line=deflines[i];
-        if (~line.indexOf('stylesheet')) continue;
-        if (~line.indexOf('class="cy"')) continue;
-        if (~line.indexOf('cy_ciTiao')) continue;        
-        if (~line.indexOf('cy_ziTiao')) continue;
+const main=[],phonetic=[],proof=[],pua=[];
+const Yixiang={'㊀':1,'㊁':2,'㊂':3,'㊃':4,'㊄':5,'㊅':6,'㊆':7,'㊇':8,'㊈':9,'㊉':10,
+    '⑪':11,'⑫':12,'⑬':13,'⑭':14,'⑮':15,'⑯':16,'⑰':17,'⑱':18,'⑲':19,'⑳':20,
+    '㉑':21,'㉒':22,'㉓':23,'㉔':24}
+const replaceHZPX=line=>{
+    for (let hzpx in PUA2HZPX) {
+        const pat=PUA2HZPX[hzpx];
         
-        if (~line=='</div>') continue;
-        entry.push(line)
+        line=line.replace(pat,'‵'+hzpx+'′');
     }
-    let parsed=parseLine(entry.join(''))
-    .replace(/<\/div>/g,'').replace(/<\/span>/g,'')
-    .replace(/。(\d+)\./g,"。\n$1.")
-    .replace(/。\^/g,"。\n^")
-    //.replace(/([^。]{10,})。([’”]*)/g,"$1。$2\n")
-    .replace(/\n+/g,'\n')
-    .replace(/\x00/g,'')
-    
-    out.push(parsed);
+    return line
 }
-const gen=(lines)=>{
-    const entry=[];
-    let name='';
-    for (let i=0;i<lines.length;i++) {
-        if (i%100==0) process.stdout.write("\r   "+i);
-        const line=lines[i];
-        const at=line.indexOf('\t')
-        if (~at) {
-            if (name) emitEntry(name,entry);
-            name=line.slice(0,at);
-            entry.length=0;
-        } else {
-            entry.push(line.slice(at+1))
+const split=(lines)=>{
+    while (lines.length&&lines[0]=='') lines.shift();
+    const yin=[];
+    const body=[];
+    const entrypua=[];
+    let wordhead='',pyz=0, //pinyinzhu
+    yx=0;
+    const emitPhonetic=()=>{
+        if (yin.length) { 
+            phonetic.push(
+            wordhead+(pyz>1?styledNumber(pyz,'₁'):'') // 形、音群
+            +'\t'+yin.join(''))  //音項
+            yin.length=0;
         }
     }
-    emitEntry(name,entry)
+
+    for (let i=0;i<lines.length;i++) {
+        let line=lines[i];
+
+        if (line.match(/[\u2ff0-\u2fff]/)) {
+            line=replaceHZPX(line);
+        }
+
+        const m=line.match(/\^〔([^〕]+)〕/);
+        if (m) { //字頭
+            emitPhonetic();
+            main.push(...body);
+            body.length=0;
+            pyz=0;
+            wordhead=m[1];
+        }
+        else if (line.startsWith('🗣')) {
+            emitPhonetic();
+            line=line.slice(2);
+            pyz++;
+        } else if (line.startsWith('⮀')) {
+            
+            entrypua.push(line.slice(2))
+            line='';
+        } else if (line.startsWith('💬')) {
+            yx=yx||(Yixiang[line.charAt(1)]||'');
+        } else if (line.startsWith('🕮')) { 
+            proof.push( wordhead
+                + (pyz>1?styledNumber(pyz,'₁'):'')+yx // 形、音群、義項
+                +'\t'+line.slice(2)); //書證
+            line='';
+        }
+        //取出音項
+        line=line.replace(/\^([a-z]+﹛[^﹜]+﹜)[。，]*/g,(m,m1)=>{
+            yin.push(m1);
+            return ''
+        })
+
+        if (line) body.push(line);
+    }
+    emitPhonetic();
 }
-gen(readTextLines(srcfn));
-writeChanged('ciyuan.off',out.join('\n'))
+
+split(lines);
+writeChanged('ciyuan-def.off',main.join('\n'),true)
+writeChanged('ciyuan-proof.off',proof.join('\n'),true)
+writeChanged('ciyuan-phonetic.tsv',phonetic.join('\n'),true)
+//writeChanged('ciyuan-pua.tsv',pua.join('\n'),true);//should be empty , move to puahzpx.js
